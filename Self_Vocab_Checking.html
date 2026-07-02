@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tự luyện từ vựng</title>
+<style>
+  :root{
+    --bg:#eef4fb;
+    --card:#ffffff;
+    --ink:#1f2a37;
+    --muted:#6b7785;
+    --green:#0f6e56;
+    --green-bg:#e1f5ee;
+    --blue:#185fa5;
+    --blue-bg:#e6f1fb;
+    --purple-bg:#eeedfe;
+    --purple:#534ab7;
+    --border:#dbe3ec;
+    --red:#a32d2d;
+    --red-bg:#fcebeb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px;
+  }
+  .wrap{width:100%;max-width:560px;}
+  h1{font-size:22px;font-weight:700;text-align:center;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 24px;text-align:center;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14px 0 6px;}
+  label:first-child{margin-top:0;}
+  select,input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:15px;}
+  .lesson-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px;}
+  .chip{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:14px;}
+  .chip input{margin:0;}
+  .chip.checked{border-color:var(--green);background:var(--green-bg);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;width:100%;border:none;border-radius:12px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer;}
+  .btn-primary{background:var(--green);color:#fff;}
+  .btn-primary:disabled{background:#9fc9bb;cursor:not-allowed;}
+  .hidden{display:none;}
+  .err{color:var(--red);font-size:13px;margin-top:8px;}
+
+  .quiz-card{background:var(--card);border-radius:20px;padding:32px 24px;text-align:center;}
+  .progress{font-size:13px;color:var(--muted);margin-bottom:18px;}
+  .timerbar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:24px;}
+  .timerfill{height:100%;background:var(--green);width:100%;}
+  .word{font-size:40px;font-weight:800;color:var(--green);margin:0 0 28px;word-break:break-word;}
+  .opt{display:block;width:100%;text-align:center;padding:16px 18px;margin-bottom:10px;border:none;border-radius:14px;font-size:17px;font-weight:600;cursor:pointer;background:var(--blue-bg);color:var(--ink);}
+  .opt:nth-child(2){background:var(--green-bg);}
+  .opt:nth-child(3){background:var(--purple-bg);}
+  .opt.correct{background:var(--green);color:#fff;}
+  .opt.wrong{background:var(--red-bg);color:var(--red);}
+  .opt:disabled{cursor:default;}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;}
+  th,td{padding:8px;border-bottom:1px solid var(--border);text-align:left;}
+  .scoreBig{font-size:36px;font-weight:700;color:var(--green);text-align:center;margin:8px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="screenSetup">
+    <h1>Tự luyện từ vựng</h1>
+    <p class="sub">Dành cho học viên vắng buổi học — làm xong sẽ tự gửi kết quả.</p>
+
+    <div class="card">
+      <label>Lớp</label>
+      <select id="lopInput">
+        <option value="">— Chọn lớp —</option>
+      </select>
+      <button class="btn btn-secondary" style="margin:8px 0" onclick="onLopChange()">Tải học viên</button>
+
+      <label>Họ tên</label>
+      <select id="nameInput" onchange="checkReady()" disabled>
+        <option value="">— Bấm "Tải học viên" trước —</option>
+      </select>
+
+      <label>Sách</label>
+      <select id="bookSelect"></select>
+
+      <label>Bài (chọn các bài cần ôn)</label>
+      <button class="btn btn-secondary" style="margin-bottom:8px" onclick="loadLessons()">Tải bài học</button>
+      <div id="lessonGrid" class="lesson-grid"><span class="sub">Bấm "Tải bài học" để xem danh sách bài…</span></div>
+
+      <div id="setupErr" class="err"></div>
+    </div>
+    <button class="btn btn-primary" id="startBtn" onclick="startQuiz()" disabled>Bắt đầu làm bài</button>
+  </div>
+
+  <div id="screenQuiz" class="hidden">
+    <div class="quiz-card">
+      <div class="progress" id="progressText"></div>
+      <div class="timerbar"><div class="timerfill" id="timerFill"></div></div>
+      <div class="word" id="wordText"></div>
+      <div id="optionsArea"></div>
+    </div>
+  </div>
+
+  <div id="screenResult" class="hidden">
+    <h1>Hoàn thành!</h1>
+    <p class="sub" id="resultSub"></p>
+    <div class="card">
+      <div class="scoreBig" id="scoreBig"></div>
+      <div id="wrongListWrap" class="hidden">
+        <label>Từ chưa thuộc</label>
+        <table><tbody id="wrongBody"></tbody></table>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="sendBtn" onclick="sendResult()">Gửi kết quả cho giáo viên</button>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRg-u2xvc-6cPFxswzi5kbSNZbCjsWQ3L72dPUWsEoxaExStX_XjGOifyzC8nMGcr9EQ/exec';
+const SECRET_KEY = '99999999';
+const TIME_PER_WORD = 3000; // 3 giây
+
+let wordPool = [];
+let quizItems = [];
+let qIdx = 0;
+let correctCount = 0;
+let wrongWords = [];
+let timerHandle, timerStart;
+let currentBook='', currentLessons=[];
+
+async function apiGet(action, params){
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action', action);
+  Object.entries(params||{}).forEach(([k,v])=>url.searchParams.set(k,v));
+  const res = await fetch(url);
+  return res.json();
+}
+async function apiPost(body){
+  const res = await fetch(APPS_SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(body)});
+  return res.json();
+}
+
+async function init(){
+  try{
+    const books = await apiGet('getBooks');
+    const sel = document.getElementById('bookSelect');
+    sel.innerHTML = books.map(b=>`<option value="${b}">${b}</option>`).join('');
+
+    const classes = await apiGet('getClasses');
+    const lopSel = document.getElementById('lopInput');
+    lopSel.innerHTML = '<option value="">— Chọn lớp —</option>' + classes.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }catch(e){
+    document.getElementById('setupErr').textContent = 'Không tải được danh sách sách/lớp.';
+  }
+}
+
+async function onLopChange(){
+  const lop = document.getElementById('lopInput').value;
+  const nameSel = document.getElementById('nameInput');
+  if(!lop){ showErr('Chọn lớp trước'); return; }
+  nameSel.innerHTML = '<option value="">Đang tải…</option>';
+  const students = await apiGet('getStudents', {lop});
+  if(!Array.isArray(students) || students.length===0){
+    nameSel.innerHTML = '<option value="">Không có học viên</option>';
+    nameSel.disabled = true;
+  }else{
+    nameSel.innerHTML = '<option value="">— Chọn tên —</option>' +
+      students.map(s=>`<option value="${s.maHV}" data-name="${s.tenHV}">${s.tenHV}</option>`).join('');
+    nameSel.disabled = false;
+  }
+  checkReady();
+}
+function showErr(msg){ document.getElementById('setupErr').textContent = msg; setTimeout(()=>document.getElementById('setupErr').textContent='',2000); }
+
+async function loadLessons(){
+  const grid = document.getElementById('lessonGrid');
+  grid.innerHTML = '<span class="sub">Đang tải bài học…</span>';
+  const book = document.getElementById('bookSelect').value;
+  const lessons = await apiGet('getLessons', {book});
+  grid.innerHTML = lessons.map(l=>`
+    <label class="chip" data-lesson="${l}">
+      <input type="checkbox" value="${l}" onchange="this.closest('.chip').classList.toggle('checked',this.checked);checkReady()">
+      ${l}
+    </label>`).join('');
+}
+
+function checkReady(){
+  const name = document.getElementById('nameInput').value;
+  const lop = document.getElementById('lopInput').value;
+  const lessonsChecked = document.querySelectorAll('#lessonGrid input:checked').length;
+  document.getElementById('startBtn').disabled = !(name && lop && lessonsChecked>0);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+async function startQuiz(){
+  currentBook = document.getElementById('bookSelect').value;
+  currentLessons = Array.from(document.querySelectorAll('#lessonGrid input:checked')).map(i=>i.value);
+  wordPool = await apiGet('getWords', {book: currentBook, lessons: currentLessons.join(',')});
+  if(!Array.isArray(wordPool) || wordPool.length < 3){
+    document.getElementById('setupErr').textContent = 'Cần ít nhất 3 từ trong các bài đã chọn.';
+    return;
+  }
+  quizItems = shuffle(wordPool);
+  qIdx = 0; correctCount = 0; wrongWords = [];
+
+  document.getElementById('screenSetup').classList.add('hidden');
+  document.getElementById('screenQuiz').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  if(qIdx >= quizItems.length){ finishQuiz(); return; }
+  const item = quizItems[qIdx];
+  document.getElementById('progressText').textContent = `Câu ${qIdx+1}/${quizItems.length}`;
+  document.getElementById('wordText').textContent = item.word;
+
+  // tạo 2 đáp án sai random từ pool (khác nghĩa đúng)
+  const others = shuffle(wordPool.filter(w=>w.meaning !== item.meaning)).slice(0,2);
+  const options = shuffle([item, ...others]);
+  const area = document.getElementById('optionsArea');
+  area.innerHTML = options.map(o=>`<button class="opt" onclick="answer('${encodeURIComponent(o.meaning)}','${encodeURIComponent(item.meaning)}', this)">${o.meaning}</button>`).join('');
+
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerHandle);
+  timerStart = Date.now();
+  const fill = document.getElementById('timerFill');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  requestAnimationFrame(()=>{
+    fill.style.transition = `width ${TIME_PER_WORD}ms linear`;
+    fill.style.width = '0%';
+  });
+  timerHandle = setTimeout(()=>{
+    if(qIdx < quizItems.length){
+      wrongWords.push(quizItems[qIdx].word);
+      lockOptions(null);
+      setTimeout(nextQuestion, 500);
+    }
+  }, TIME_PER_WORD);
+}
+
+function lockOptions(chosenBtn){
+  document.querySelectorAll('.opt').forEach(b=>b.disabled = true);
+}
+
+function answer(chosen, correct, btn){
+  clearTimeout(timerHandle);
+  const isCorrect = decodeURIComponent(chosen) === decodeURIComponent(correct);
+  document.querySelectorAll('.opt').forEach(b=>{
+    if(decodeURIComponent(b.textContent) === decodeURIComponent(correct)) b.classList.add('correct');
+  });
+  if(isCorrect){ correctCount++; }
+  else { btn.classList.add('wrong'); wrongWords.push(quizItems[qIdx].word); }
+  lockOptions();
+  setTimeout(nextQuestion, 600);
+}
+
+function nextQuestion(){
+  qIdx++;
+  renderQuestion();
+}
+
+function finishQuiz(){
+  document.getElementById('screenQuiz').classList.add('hidden');
+  document.getElementById('screenResult').classList.remove('hidden');
+  const total = quizItems.length;
+  const pct = Math.round((correctCount/total)*100);
+  document.getElementById('resultSub').textContent = `${currentBook} · ${currentLessons.join(', ')}`;
+  document.getElementById('scoreBig').textContent = `${correctCount}/${total} (${pct}%)`;
+  if(wrongWords.length){
+    document.getElementById('wrongListWrap').classList.remove('hidden');
+    document.getElementById('wrongBody').innerHTML = wrongWords.map(w=>`<tr><td>${w}</td></tr>`).join('');
+  }
+}
+
+async function sendResult(){
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = 'Đang gửi…';
+  const today = new Date().toLocaleDateString('vi-VN');
+  const total = quizItems.length;
+  const pct = Math.round((correctCount/total)*100);
+  const nameSel = document.getElementById('nameInput');
+  const selectedOpt = nameSel.options[nameSel.selectedIndex];
+  const row = {
+    ngay: today, maHV: nameSel.value, tenHV: selectedOpt ? selectedOpt.dataset.name : '',
+    lop: document.getElementById('lopInput').value,
+    sach: currentBook, baiDaChon: currentLessons.join(', '),
+    tongSoTu: total, soTuThuoc: correctCount, phanTram: pct + '%',
+    tuVungSai: wrongWords.join(', ')
+  };
+  try{
+    const res = await apiPost({key: SECRET_KEY, action:'saveResult', rows:[row]});
+    if(res.success){ btn.textContent = 'Đã gửi ✓'; }
+    else throw new Error(res.error || 'Lỗi');
+  }catch(e){
+    btn.disabled = false; btn.textContent = 'Gửi kết quả cho giáo viên';
+    alert('Lỗi khi gửi: ' + e.message);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý chung</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f4f9;--card:#fff;--ink:#1a2332;--muted:#64748b;--border:#dde3ed;
+  --green:#0f6e56;--green-bg:#e1f5ee;
+  --blue:#1a5fa8;--blue-bg:#e8f0fb;
+  --amber:#b45309;--amber-bg:#fef3c7;
+  --red:#a32d2d;--red-bg:#fcebeb;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding:24px 16px 60px;}
+.wrap{max-width:920px;margin:0 auto;}
+h1{font-size:20px;font-weight:700;margin-bottom:4px;}
+.sub{color:var(--muted);font-size:14px;margin-bottom:24px;}
+
+/* === LỚP 1: ACCORDION LỚP === */
+.class-block{margin-bottom:12px;border-radius:14px;overflow:visible;}
+.class-bar{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px 20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  transition:background .12s;box-shadow:var(--shadow);
+}
+.class-bar:hover{background:#f8fafc;}
+.class-bar.open{border-radius:14px 14px 0 0;border-bottom-color:transparent;}
+.class-left{display:flex;flex-direction:column;gap:3px;}
+.class-name{font-size:16px;font-weight:700;}
+.class-meta{font-size:12px;color:var(--muted);}
+.class-right{display:flex;align-items:center;gap:20px;}
+.stat-pill{display:flex;flex-direction:column;align-items:center;min-width:52px;}
+.stat-pill .sv{font-size:16px;font-weight:700;}
+.stat-pill .sk{font-size:10px;color:var(--muted);margin-top:1px;}
+.sv.good{color:var(--green)}.sv.warn{color:var(--amber)}.sv.bad{color:var(--red)}
+.chev{color:var(--muted);font-size:13px;transition:transform .2s;}
+.chev.open{transform:rotate(180deg);}
+
+/* === LỚP 2: DANH SÁCH HỌC VIÊN === */
+.student-list{display:none;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;overflow:hidden;}
+.student-list.open{display:block;}
+.list-loading{padding:20px;text-align:center;color:var(--muted);font-size:14px;}
+
+.student-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 20px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .1s;position:relative;
+}
+.student-row:last-child{border-bottom:none;}
+.student-row:hover{background:#f8fafc;}
+.student-row.risk{background:#fff5f5;}
+.student-row.risk:hover{background:#fee8e8;}
+.student-row.active-tip{background:#eef4fb;}
+
+.s-left{display:flex;flex-direction:column;gap:2px;}
+.s-name{font-size:14px;font-weight:600;}
+.s-ma{font-size:11px;color:var(--muted);}
+.risk-tag{display:inline-block;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:8px;vertical-align:middle;}
+.s-metrics{display:flex;gap:16px;align-items:center;}
+.sm{text-align:center;min-width:56px;}
+.sm .mv{font-size:13px;font-weight:700;}
+.sm .mk{font-size:10px;color:var(--muted);}
+.mv.warn{color:var(--red);}.mv.ok{color:var(--green);}
+
+/* === LỚP 3: TOOLTIP === */
+.tip-overlay{display:none;position:fixed;inset:0;z-index:99;}
+.tip-overlay.show{display:block;}
+.tip-box{
+  position:fixed;z-index:100;
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.16);
+  padding:18px;width:380px;max-height:82vh;overflow-y:auto;
+}
+.tip-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.tip-name{font-size:15px;font-weight:700;}
+.tip-ma{font-size:11px;color:var(--muted);margin-top:2px;}
+.tip-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:2px;}
+.tip-section{margin-bottom:14px;}
+.tip-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.tip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.tip-m{background:var(--bg);border-radius:10px;padding:9px;text-align:center;}
+.tip-m .tv{font-size:15px;font-weight:700;}
+.tip-m .tk{font-size:10px;color:var(--muted);margin-top:2px;}
+.risk-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.risk-chip{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600;}
+.rc-red{background:var(--red-bg);color:var(--red);}
+.rc-ok{background:var(--green-bg);color:var(--green);}
+.note-item{font-size:12px;padding:7px 10px;background:var(--amber-bg);border-radius:8px;margin-bottom:5px;}
+.note-date{font-size:10px;color:var(--muted);margin-bottom:2px;}
+.chart-wrap{height:150px;margin-top:6px;}
+.no-data{color:var(--muted);font-size:13px;text-align:center;padding:14px 0;}
+
+@media(max-width:600px){
+  .stat-pill{display:none;}
+  .s-metrics{gap:8px;}
+  .tip-box{width:calc(100vw - 24px);left:12px!important;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Quản lý chung</h1>
+  <p class="sub">Bấm vào lớp để xem chi tiết · Bấm học viên để xem popup</p>
+  <div id="classArea"><p class="sub">Đang tải danh sách lớp…</p></div>
+</div>
+
+<!-- Tooltip overlay -->
+<div class="tip-overlay" id="tipOverlay" onclick="handleOverlayClick(event)"></div>
+<div class="tip-box" id="tipBox" style="display:none">
+  <div class="tip-head">
+    <div><div class="tip-name" id="tipName"></div><div class="tip-ma" id="tipMa"></div></div>
+    <button class="tip-close" onclick="closeTip()">✕</button>
+  </div>
+  <div class="risk-row" id="tipRisks"></div>
+  <div class="tip-section">
+    <div class="tip-label">Chỉ số buổi học</div>
+    <div class="tip-grid" id="tipMetrics"></div>
+  </div>
+  <div class="tip-section" id="tipNoteSection" style="display:none">
+    <div class="tip-label">Ghi chú trong lớp</div>
+    <div id="tipNotes"></div>
+  </div>
+  <div class="tip-section" id="tipScoreSection" style="display:none">
+    <div class="tip-label">Lịch sử điểm thi</div>
+    <div class="chart-wrap"><canvas id="tipChart"></canvas></div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyRg-u2xvc-6cPFxswzi5kbSNZbCjsWQ3L72dPUWsEoxaExStX_XjGOifyzC8nMGcr9EQ/exec';
+let loadedData={};
+let chartInst=null;
+let openTipMa=null;
+
+async function apiGet(action,params){
+  const url=new URL(APPS_SCRIPT_URL);
+  url.searchParams.set('action',action);
+  Object.entries(params||{}).forEach(([k,v])=>url.searchParams.set(k,v));
+  const r=await fetch(url); return r.json();
+}
+
+async function init(){
+  try{
+    const classes=await apiGet('getClasses');
+    const area=document.getElementById('classArea');
+    area.innerHTML='';
+    classes.forEach(lop=>{
+      const div=document.createElement('div');
+      div.className='class-block';
+      div.innerHTML=`
+        <div class="class-bar" id="bar-${lop}" onclick="toggleClass('${lop}')">
+          <div class="class-left">
+            <div class="class-name">📚 ${lop}</div>
+            <div class="class-meta" id="meta-${lop}">Bấm để tải dữ liệu</div>
+          </div>
+          <div class="class-right">
+            <div id="stats-${lop}"></div>
+            <span class="chev" id="chev-${lop}">▼</span>
+          </div>
+        </div>
+        <div class="student-list" id="list-${lop}">
+          <div class="list-loading">Bấm vào thanh lớp để tải…</div>
+        </div>`;
+      area.appendChild(div);
+    });
+  }catch(e){
+    document.getElementById('classArea').innerHTML='<p style="color:red">Lỗi: '+e.message+'</p>';
+  }
+}
+
+async function toggleClass(lop){
+  const bar=document.getElementById('bar-'+lop);
+  const list=document.getElementById('list-'+lop);
+  const chev=document.getElementById('chev-'+lop);
+  const isOpen=list.classList.contains('open');
+  if(isOpen){list.classList.remove('open');bar.classList.remove('open');chev.classList.remove('open');return;}
+  list.classList.add('open');bar.classList.add('open');chev.classList.add('open');
+  if(loadedData[lop]){renderStudents(lop,loadedData[lop].students);return;}
+  list.innerHTML='<div class="list-loading">Đang tải dữ liệu lớp…</div>';
+  try{
+    const data=await apiGet('getDashboard',{lop});
+    if(data.error){list.innerHTML='<div class="list-loading" style="color:red">'+data.error+'</div>';return;}
+    loadedData[lop]=data;
+    renderStats(lop,data);
+    renderStudents(lop,data.students);
+  }catch(e){list.innerHTML='<div class="list-loading" style="color:red">Lỗi: '+e.message+'</div>';}
+}
+
+function pctCls(v,hi,lo){if(v==null)return '';return v>=hi?'good':v<lo?'bad':'warn';}
+
+function renderStats(lop,d){
+  document.getElementById('meta-'+lop).textContent=
+    `Khai giảng: ${d.ngayKhaiGiang} · Buổi ${d.soiBuoi} · Sĩ số: ${d.siSo}`+
+    (d.nghiHoc?` · Nghỉ: ${d.nghiHoc}`:'')+
+    (d.baoLuu?` · Bảo lưu: ${d.baoLuu}`:'');
+  document.getElementById('stats-'+lop).innerHTML=`
+    <div style="display:flex;gap:16px">
+      <div class="stat-pill"><span class="sv ${pctCls(d.pctDiHoc,80,60)}">${d.pctDiHoc}%</span><span class="sk">Đi học</span></div>
+      <div class="stat-pill"><span class="sv ${pctCls(d.pctTuVung,80,60)}">${d.pctTuVung}%</span><span class="sk">Từ vựng</span></div>
+      <div class="stat-pill"><span class="sv ${pctCls(d.pctBuBai,80,50)}">${d.pctBuBai}%</span><span class="sk">Bù bài</span></div>
+    </div>`;
+}
+
+function renderStudents(lop,students){
+  const list=document.getElementById('list-'+lop);
+  if(!students||!students.length){list.innerHTML='<div class="list-loading">Không có học viên.</div>';return;}
+  list.innerHTML=students.map(s=>{
+    const vTxt=s.tongVang?`${s.tongVang} (${s.vangCP}CP·${s.vangKP}KP)`:'0';
+    const vCls=s.tongVang>3?'warn':'';
+    const avgV=s.avgVocab!==null?s.avgVocab+'%':'—';
+    const avgCls=s.avgVocab!==null?(s.avgVocab>=80?'ok':'warn'):'';
+    const sc=s.maxScore!==null?s.maxScore:'—';
+    return `<div class="student-row${s.isRisk?' risk':''}" id="sr-${s.maHV}" onclick="toggleTip('${lop}','${s.maHV}',event)">
+      <div class="s-left">
+        <div class="s-name">${s.tenHV}${s.isRisk?'<span class="risk-tag">⚠ Cần chú ý</span>':''}</div>
+        <div class="s-ma">${s.maHV}</div>
+      </div>
+      <div class="s-metrics">
+        <div class="sm"><div class="mv ${vCls}">${vTxt}</div><div class="mk">Vắng</div></div>
+        <div class="sm"><div class="mv">${s.daBu}/${s.tongVang}</div><div class="mk">Đã bù</div></div>
+        <div class="sm"><div class="mv ${avgCls}">${avgV}</div><div class="mk">Từ vựng</div></div>
+        <div class="sm"><div class="mv">${sc}</div><div class="mk">Điểm cao nhất</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTip(lop,maHV,event){
+  event.stopPropagation();
+  if(openTipMa===maHV){closeTip();return;}
+  if(openTipMa) document.getElementById('sr-'+openTipMa)?.classList.remove('active-tip');
+  openTipMa=maHV;
+  document.getElementById('sr-'+maHV).classList.add('active-tip');
+  const d=loadedData[lop];
+  if(!d) return;
+  const s=d.students.find(x=>x.maHV===maHV);
+  if(!s) return;
+
+  document.getElementById('tipName').textContent=s.tenHV;
+  document.getElementById('tipMa').textContent=s.maHV;
+
+  // Risk chips
+  const rLabels=[
+    {k:'buBai',label:'Chưa bù ≥3 buổi'},
+    {k:'vangLienTuc',label:'Vắng liên tục >3'},
+    {k:'vocab',label:'Từ vựng <80%'},
+    {k:'btvn',label:'BTVN thiếu ≥3'},
+  ];
+  document.getElementById('tipRisks').innerHTML=rLabels.map(r=>
+    `<span class="risk-chip ${s.risks&&s.risks[r.k]?'rc-red':'rc-ok'}">${s.risks&&s.risks[r.k]?'⚠':'✓'} ${r.label}</span>`
+  ).join('');
+
+  // Metrics
+  const metrics=[
+    {v:s.tongVang,k:'Buổi vắng',sub:`${s.vangCP} CP · ${s.vangKP} KP`},
+    {v:s.daBu+'/'+s.tongVang,k:'Đã bù bài'},
+    {v:s.avgVocab!==null?s.avgVocab+'%':'—',k:'% Từ vựng tb'},
+    {v:s.phutTre||0,k:'Tổng phút trễ'},
+    {v:s.phutVe||0,k:'Tổng phút về sớm'},
+    {v:s.btvnThieu||0,k:'BTVN thiếu'},
+  ];
+  document.getElementById('tipMetrics').innerHTML=metrics.map(m=>
+    `<div class="tip-m"><div class="tv">${m.v}</div><div class="tk">${m.k}</div>${m.sub?`<div class="tk">${m.sub}</div>`:''}</div>`
+  ).join('');
+
+  // Ghi chú
+  const noteEl=document.getElementById('tipNoteSection');
+  if(s.ghiChu&&s.ghiChu.length){
+    noteEl.style.display='block';
+    document.getElementById('tipNotes').innerHTML=s.ghiChu.map(g=>
+      `<div class="note-item"><div class="note-date">${g.ngay}</div>${g.text}</div>`
+    ).join('');
+  }else noteEl.style.display='none';
+
+  // Chart điểm thi
+  const scEl=document.getElementById('tipScoreSection');
+  if(s.scores&&s.scores.length){
+    scEl.style.display='block';
+    if(chartInst) chartInst.destroy();
+    const sorted=[...s.scores].sort((a,b)=>new Date(a.ngay)-new Date(b.ngay));
+    chartInst=new Chart(document.getElementById('tipChart').getContext('2d'),{
+      type:'line',
+      data:{
+        labels:sorted.map(x=>x.test||x.ngay),
+        datasets:[
+          {label:'Overall',data:sorted.map(x=>x.score),borderColor:'#1a5fa8',backgroundColor:'rgba(26,95,168,.08)',tension:.3,pointRadius:4},
+          {label:'Nghe',data:sorted.map(x=>x.nghe),borderColor:'#0f6e56',tension:.3,pointRadius:3,hidden:true},
+          {label:'Đọc',data:sorted.map(x=>x.doc),borderColor:'#b45309',tension:.3,pointRadius:3,hidden:true}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},
+        scales:{y:{beginAtZero:false},x:{ticks:{font:{size:9}}}}
+      }
+    });
+  }else scEl.style.display='none';
+
+  // Vị trí tooltip
+  const box=document.getElementById('tipBox');
+  box.style.display='block';
+  document.getElementById('tipOverlay').classList.add('show');
+  const margin=12,W=380,H=Math.min(480,window.innerHeight*0.82);
+  let left=event.clientX+16,top=event.clientY-20;
+  if(left+W>window.innerWidth-margin) left=event.clientX-W-8;
+  if(left<margin) left=margin;
+  if(top+H>window.innerHeight-margin) top=window.innerHeight-H-margin;
+  if(top<margin) top=margin;
+  box.style.left=left+'px';box.style.top=top+'px';
+}
+
+function handleOverlayClick(e){
+  if(!document.getElementById('tipBox').contains(e.target)) closeTip();
+}
+function closeTip(){
+  if(openTipMa) document.getElementById('sr-'+openTipMa)?.classList.remove('active-tip');
+  openTipMa=null;
+  document.getElementById('tipBox').style.display='none';
+  document.getElementById('tipOverlay').classList.remove('show');
+}
+
+init();
+</script>
+</body>
+</html>

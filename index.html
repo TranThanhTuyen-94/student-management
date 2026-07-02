@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý lớp học</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#f0f4f9; --card:#fff; --ink:#1a2332; --muted:#64748b; --border:#dde3ed;
+    --green:#0f6e56; --green-bg:#e1f5ee;
+    --blue:#1a5fa8; --blue-bg:#e8f0fb;
+    --amber:#b45309; --amber-bg:#fef3c7;
+    --purple:#5b3fa6; --purple-bg:#ede9fb;
+    --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+
+  /* HEADER */
+  .top-bar{
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+    padding:0 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;top:0;z-index:10;
+    box-shadow:0 1px 6px rgba(0,0,0,0.06);
+  }
+  .top-bar .logo{font-size:15px;font-weight:700;color:var(--ink);padding:16px 0;}
+  .top-bar .date{font-size:13px;color:var(--muted);}
+
+  /* TAB BAR */
+  .tab-bar{
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    padding:0 24px;
+    gap:4px;
+    overflow-x:auto;
+  }
+  .tab-btn{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;
+    border:none;background:none;cursor:pointer;
+    font-size:14px;font-weight:500;color:var(--muted);
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+    transition:color .15s;
+    font-family:inherit;
+  }
+  .tab-btn:hover{color:var(--ink);}
+  .tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
+  .tab-btn .tab-icon{font-size:16px;}
+
+  /* CONTENT */
+  .tab-content{display:none;padding:32px 24px;max-width:800px;margin:0 auto;}
+  .tab-content.active{display:block;}
+
+  /* MODULE CARDS bên trong tab */
+  .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px;}
+  .module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px;}
+  .mod-card{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:18px;text-decoration:none;color:inherit;
+    display:flex;flex-direction:column;gap:10px;
+    box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s;
+  }
+  .mod-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+  .mod-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;}
+  .mod-title{font-size:14px;font-weight:700;}
+  .mod-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+  .mod-link{font-size:12px;font-weight:600;margin-top:auto;}
+
+  .green .mod-icon{background:var(--green-bg);}
+  .green .mod-link{color:var(--green);}
+  .blue .mod-icon{background:var(--blue-bg);}
+  .blue .mod-link{color:var(--blue);}
+  .amber .mod-icon{background:var(--amber-bg);}
+  .amber .mod-link{color:var(--amber);}
+  .purple .mod-icon{background:var(--purple-bg);}
+  .purple .mod-link{color:var(--purple);}
+
+  /* 2 nút từ vựng */
+  .vocab-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .vocab-card{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:18px;text-decoration:none;color:inherit;
+    display:flex;flex-direction:column;gap:10px;
+    box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s;
+  }
+  .vocab-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+
+  /* Placeholder quản lý chung */
+  .coming-soon{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:48px 24px;text-align:center;
+    box-shadow:var(--shadow);
+  }
+  .coming-soon .cs-icon{font-size:40px;margin-bottom:16px;}
+  .coming-soon h2{font-size:18px;font-weight:700;margin-bottom:8px;}
+  .coming-soon p{font-size:14px;color:var(--muted);line-height:1.6;}
+
+  @media(max-width:480px){
+    .module-grid,.vocab-grid{grid-template-columns:1fr;}
+    .tab-btn{padding:12px 12px;font-size:13px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">📚 Quản lý lớp học</div>
+  <div class="date" id="todayDate"></div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('quanly',this)">
+    <span class="tab-icon">📊</span> Quản lý chung
+  </button>
+  <button class="tab-btn" onclick="switchTab('diemdanh',this)">
+    <span class="tab-icon">✅</span> Điểm danh
+  </button>
+  <button class="tab-btn" onclick="switchTab('tuvung',this)">
+    <span class="tab-icon">📖</span> Từ vựng
+  </button>
+  <button class="tab-btn" onclick="switchTab('btvn',this)">
+    <span class="tab-icon">📝</span> BTVN
+  </button>
+</div>
+
+<!-- TAB: QUẢN LÝ CHUNG -->
+<div id="tab-quanly" class="tab-content active">
+  <div class="coming-soon">
+    <div class="cs-icon">📊</div>
+    <h2>Quản lý chung</h2>
+    <p>Tổng hợp tiến độ và chỉ số toàn bộ học viên đang được xây dựng.<br>Sắp ra mắt sau khi hoàn thiện đủ dữ liệu từ các module.</p>
+  </div>
+</div>
+
+<!-- TAB: ĐIỂM DANH -->
+<div id="tab-diemdanh" class="tab-content">
+  <p class="section-title">Module điểm danh</p>
+  <div class="module-grid" style="grid-template-columns:1fr;">
+    <a class="mod-card green" href="diemdanh.html">
+      <div class="mod-icon">✅</div>
+      <div class="mod-title">Điểm danh buổi học</div>
+      <div class="mod-desc">Ghi nhận có mặt, vắng, đi trễ, về sớm và ghi chú từng buổi học.</div>
+      <div class="mod-link">Mở →</div>
+    </a>
+  </div>
+</div>
+
+<!-- TAB: TỪ VỰNG -->
+<div id="tab-tuvung" class="tab-content">
+  <p class="section-title">Chọn chế độ từ vựng</p>
+  <div class="vocab-grid">
+    <a class="vocab-card blue" href="tuvung-dotrenlop.html">
+      <div class="mod-icon blue" style="background:var(--blue-bg)">🎯</div>
+      <div class="mod-title">Dò bài trên lớp</div>
+      <div class="mod-desc">Random từ + học viên, ghi nhận kết quả trực tiếp trong buổi học.</div>
+      <div class="mod-link" style="color:var(--blue)">Mở →</div>
+    </a>
+    <a class="vocab-card green" href="tuvung-tuluyen.html">
+      <div class="mod-icon" style="background:var(--green-bg)">🏠</div>
+      <div class="mod-title">Tự ôn tại nhà</div>
+      <div class="mod-desc">Link dành cho học viên vắng, tự làm trắc nghiệm và gửi kết quả.</div>
+      <div class="mod-link" style="color:var(--green)">Mở →</div>
+    </a>
+  </div>
+</div>
+
+<!-- TAB: BTVN -->
+<div id="tab-btvn" class="tab-content">
+  <p class="section-title">Module bài tập về nhà</p>
+  <div class="module-grid" style="grid-template-columns:1fr;">
+    <a class="mod-card amber" href="btvn.html">
+      <div class="mod-icon">📝</div>
+      <div class="mod-title">Chấm BTVN</div>
+      <div class="mod-desc">Xem nhanh bài tập từng học viên và chấm trạng thái mỗi buổi.</div>
+      <div class="mod-link">Mở →</div>
+    </a>
+  </div>
+</div>
+
+<script>
+  const today = new Date();
+  document.getElementById('todayDate').textContent = today.toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  function switchTab(name, btn){
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
