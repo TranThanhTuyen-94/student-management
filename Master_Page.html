@@ -7,133 +7,147 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#f0f4f9;--card:#fff;--ink:#1a2332;--muted:#64748b;--border:#dde3ed;
-  --green:#0f6e56;--green-bg:#e1f5ee;
-  --blue:#1a5fa8;--blue-bg:#e8f0fb;
-  --amber:#b45309;--amber-bg:#fef3c7;
-  --red:#a32d2d;--red-bg:#fcebeb;
-  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.06);
+  --bg:#f0f4ff;--card:#fff;--ink:#1e2d5a;--muted:#6b7da8;--border:#dde5f7;
+  --green:#10b981;--green-bg:#d1fae5;
+  --blue:#3b82f6;--blue-bg:#dbeafe;
+  --amber:#f59e0b;--amber-bg:#fef3c7;
+  --red:#ef4444;--red-bg:#fee2e2;
+  --shadow:0 2px 8px rgba(30,45,90,.1),0 1px 3px rgba(30,45,90,.06);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding:24px 16px 60px;}
-.wrap{max-width:920px;margin:0 auto;}
-h1{font-size:20px;font-weight:700;margin-bottom:4px;}
-.sub{color:var(--muted);font-size:14px;margin-bottom:24px;}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:20px 16px 60px;}
+.wrap{max-width:960px;margin:0 auto;}
+.page-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
 
-/* === LỚP 1: ACCORDION LỚP === */
-.class-block{margin-bottom:12px;border-radius:14px;overflow:visible;}
+/* Loading */
+.loading{text-align:center;padding:48px;color:var(--muted);font-size:14px;}
+.spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* CLASS BAR */
+.class-block{margin-bottom:10px;}
 .class-bar{
   background:var(--card);border:1px solid var(--border);border-radius:14px;
-  padding:16px 20px;cursor:pointer;
+  padding:14px 18px;cursor:pointer;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  transition:background .12s;box-shadow:var(--shadow);
+  box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s;
+  position:relative;overflow:hidden;
 }
-.class-bar:hover{background:#f8fafc;}
+.class-bar::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:14px 0 0 14px;}
+.class-bar.status-good::before{background:var(--green);}
+.class-bar.status-warn::before{background:var(--amber);}
+.class-bar.status-bad::before{background:var(--red);}
+.class-bar:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(30,45,90,.12);}
 .class-bar.open{border-radius:14px 14px 0 0;border-bottom-color:transparent;}
-.class-left{display:flex;flex-direction:column;gap:3px;}
-.class-name{font-size:16px;font-weight:700;}
-.class-meta{font-size:12px;color:var(--muted);}
-.class-right{display:flex;align-items:center;gap:20px;}
-.stat-pill{display:flex;flex-direction:column;align-items:center;min-width:52px;}
-.stat-pill .sv{font-size:16px;font-weight:700;}
-.stat-pill .sk{font-size:10px;color:var(--muted);margin-top:1px;}
-.sv.good{color:var(--green)}.sv.warn{color:var(--amber)}.sv.bad{color:var(--red)}
-.chev{color:var(--muted);font-size:13px;transition:transform .2s;}
+.cb-left{display:flex;flex-direction:column;gap:2px;padding-left:8px;}
+.cb-name{font-size:15px;font-weight:700;}
+.cb-meta{font-size:11px;color:var(--muted);}
+.cb-right{display:flex;align-items:center;gap:14px;}
+.stat-group{display:flex;gap:14px;}
+.sp{display:flex;flex-direction:column;align-items:center;min-width:48px;}
+.sp .sv{font-size:16px;font-weight:800;}
+.sp .sk{font-size:10px;color:var(--muted);margin-top:1px;}
+.sv.g{color:var(--green)}.sv.w{color:var(--amber)}.sv.b{color:var(--red)}
+.chev{font-size:12px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
 .chev.open{transform:rotate(180deg);}
+.loading-bar{background:var(--bg);height:3px;border-radius:2px;overflow:hidden;margin-top:6px;}
+.loading-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));animation:loadbar 1.2s ease-in-out infinite;}
+@keyframes loadbar{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
 
-/* === LỚP 2: DANH SÁCH HỌC VIÊN === */
+/* STUDENT LIST */
 .student-list{display:none;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;overflow:hidden;}
 .student-list.open{display:block;}
-.list-loading{padding:20px;text-align:center;color:var(--muted);font-size:14px;}
-
+.list-msg{padding:16px 20px;text-align:center;color:var(--muted);font-size:13px;}
 .student-row{
   display:flex;align-items:center;justify-content:space-between;
-  padding:11px 20px;border-bottom:1px solid var(--border);
-  cursor:pointer;transition:background .1s;position:relative;
+  padding:10px 18px 10px 22px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .1s;
 }
 .student-row:last-child{border-bottom:none;}
-.student-row:hover{background:#f8fafc;}
+.student-row:hover{background:#f5f7ff;}
 .student-row.risk{background:#fff5f5;}
 .student-row.risk:hover{background:#fee8e8;}
-.student-row.active-tip{background:#eef4fb;}
+.student-row.tip-open{background:#eef3ff;}
+.s-left{display:flex;flex-direction:column;gap:1px;}
+.s-name{font-size:13px;font-weight:600;}
+.s-ma{font-size:10px;color:var(--muted);}
+.risk-tag{display:inline-block;background:var(--red-bg);color:var(--red);font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+.s-metrics{display:flex;gap:14px;}
+.sm{text-align:center;min-width:52px;}
+.sm .mv{font-size:12px;font-weight:700;}
+.sm .mk{font-size:9px;color:var(--muted);}
+.mv.ok{color:var(--green);}.mv.warn{color:var(--red);}
 
-.s-left{display:flex;flex-direction:column;gap:2px;}
-.s-name{font-size:14px;font-weight:600;}
-.s-ma{font-size:11px;color:var(--muted);}
-.risk-tag{display:inline-block;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:8px;vertical-align:middle;}
-.s-metrics{display:flex;gap:16px;align-items:center;}
-.sm{text-align:center;min-width:56px;}
-.sm .mv{font-size:13px;font-weight:700;}
-.sm .mk{font-size:10px;color:var(--muted);}
-.mv.warn{color:var(--red);}.mv.ok{color:var(--green);}
-
-/* === LỚP 3: TOOLTIP === */
+/* TOOLTIP */
 .tip-overlay{display:none;position:fixed;inset:0;z-index:99;}
 .tip-overlay.show{display:block;}
 .tip-box{
   position:fixed;z-index:100;
   background:var(--card);border:1px solid var(--border);border-radius:16px;
-  box-shadow:0 8px 32px rgba(0,0,0,.16);
-  padding:18px;width:380px;max-height:82vh;overflow-y:auto;
+  box-shadow:0 8px 40px rgba(30,45,90,.18);
+  padding:18px;width:370px;max-height:80vh;overflow-y:auto;
 }
-.tip-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.tip-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
 .tip-name{font-size:15px;font-weight:700;}
-.tip-ma{font-size:11px;color:var(--muted);margin-top:2px;}
-.tip-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:2px;}
-.tip-section{margin-bottom:14px;}
-.tip-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.tip-ma{font-size:10px;color:var(--muted);margin-top:2px;}
+.tip-close{background:var(--red-bg);color:var(--red);border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700;}
+.risk-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;}
+.rc{font-size:10px;padding:3px 8px;border-radius:99px;font-weight:600;}
+.rc-bad{background:var(--red-bg);color:var(--red);}
+.rc-ok{background:var(--green-bg);color:var(--green);}
+.tip-sec{margin-bottom:14px;}
+.tip-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
 .tip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
 .tip-m{background:var(--bg);border-radius:10px;padding:9px;text-align:center;}
-.tip-m .tv{font-size:15px;font-weight:700;}
+.tip-m .tv{font-size:15px;font-weight:800;}
 .tip-m .tk{font-size:10px;color:var(--muted);margin-top:2px;}
-.risk-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
-.risk-chip{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:600;}
-.rc-red{background:var(--red-bg);color:var(--red);}
-.rc-ok{background:var(--green-bg);color:var(--green);}
-.note-item{font-size:12px;padding:7px 10px;background:var(--amber-bg);border-radius:8px;margin-bottom:5px;}
-.note-date{font-size:10px;color:var(--muted);margin-bottom:2px;}
-.chart-wrap{height:150px;margin-top:6px;}
-.no-data{color:var(--muted);font-size:13px;text-align:center;padding:14px 0;}
+.note-item{font-size:12px;padding:7px 10px;background:var(--amber-bg);border-radius:8px;margin-bottom:5px;line-height:1.4;}
+.note-date{font-size:10px;color:var(--amber);font-weight:600;margin-bottom:2px;}
+.chart-wrap{height:150px;margin-top:8px;}
+.no-data{color:var(--muted);font-size:12px;text-align:center;padding:12px;}
 
 @media(max-width:600px){
-  .stat-pill{display:none;}
-  .s-metrics{gap:8px;}
-  .tip-box{width:calc(100vw - 24px);left:12px!important;}
+  .stat-group{display:none;}
+  .tip-box{width:calc(100vw - 20px);left:10px!important;}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Quản lý chung</h1>
-  <p class="sub">Bấm vào lớp để xem chi tiết · Bấm học viên để xem popup</p>
-  <div id="classArea"><p class="sub">Đang tải danh sách lớp…</p></div>
+  <div class="page-title">Quản lý chung</div>
+  <div class="page-sub">Tất cả lớp · Bấm vào lớp để xem học viên · Bấm học viên để xem chi tiết</div>
+  <div id="classArea">
+    <div class="loading">
+      <div class="spinner"></div><br>Đang tải dữ liệu tất cả lớp…
+    </div>
+  </div>
 </div>
 
-<!-- Tooltip overlay -->
-<div class="tip-overlay" id="tipOverlay" onclick="handleOverlayClick(event)"></div>
+<div class="tip-overlay" id="tipOverlay" onclick="handleOverlay(event)"></div>
 <div class="tip-box" id="tipBox" style="display:none">
   <div class="tip-head">
     <div><div class="tip-name" id="tipName"></div><div class="tip-ma" id="tipMa"></div></div>
-    <button class="tip-close" onclick="closeTip()">✕</button>
+    <button class="tip-close" onclick="closeTip()">✕ Đóng</button>
   </div>
-  <div class="risk-row" id="tipRisks"></div>
-  <div class="tip-section">
-    <div class="tip-label">Chỉ số buổi học</div>
+  <div class="risk-chips" id="tipRisks"></div>
+  <div class="tip-sec">
+    <div class="tip-lbl">Chỉ số</div>
     <div class="tip-grid" id="tipMetrics"></div>
   </div>
-  <div class="tip-section" id="tipNoteSection" style="display:none">
-    <div class="tip-label">Ghi chú trong lớp</div>
+  <div class="tip-sec" id="tipNotesSec" style="display:none">
+    <div class="tip-lbl">Ghi chú trong lớp</div>
     <div id="tipNotes"></div>
   </div>
-  <div class="tip-section" id="tipScoreSection" style="display:none">
-    <div class="tip-label">Lịch sử điểm thi</div>
+  <div class="tip-sec" id="tipScoreSec" style="display:none">
+    <div class="tip-lbl">Lịch sử điểm thi</div>
     <div class="chart-wrap"><canvas id="tipChart"></canvas></div>
   </div>
 </div>
 
 <script>
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbyRg-u2xvc-6cPFxswzi5kbSNZbCjsWQ3L72dPUWsEoxaExStX_XjGOifyzC8nMGcr9EQ/exec';
-let loadedData={};
+let detailCache={};
 let chartInst=null;
 let openTipMa=null;
 
@@ -141,35 +155,43 @@ async function apiGet(action,params){
   const url=new URL(APPS_SCRIPT_URL);
   url.searchParams.set('action',action);
   Object.entries(params||{}).forEach(([k,v])=>url.searchParams.set(k,v));
-  const r=await fetch(url); return r.json();
+  return (await fetch(url)).json();
 }
+
+function pCls(v,hi,lo){return v==null?'':v>=hi?'g':v<lo?'b':'w';}
 
 async function init(){
   try{
-    const classes=await apiGet('getClasses');
+    const allStats=await apiGet('getAllClassStats');
     const area=document.getElementById('classArea');
     area.innerHTML='';
-    classes.forEach(lop=>{
+    allStats.forEach(d=>{
+      const worst=Math.min(d.pctDiHoc,d.pctTuVung,d.pctBuBai);
+      const status=worst>=80?'good':worst>=60?'warn':'bad';
       const div=document.createElement('div');
       div.className='class-block';
       div.innerHTML=`
-        <div class="class-bar" id="bar-${lop}" onclick="toggleClass('${lop}')">
-          <div class="class-left">
-            <div class="class-name">📚 ${lop}</div>
-            <div class="class-meta" id="meta-${lop}">Bấm để tải dữ liệu</div>
+        <div class="class-bar status-${status}" id="bar-${d.lop}" onclick="toggleClass('${d.lop}')">
+          <div class="cb-left">
+            <div class="cb-name">📚 ${d.lop}</div>
+            <div class="cb-meta">Khai giảng: ${d.ngayKhaiGiang} · Buổi ${d.soiBuoi} · Sĩ số: ${d.siSo}${d.nghiHoc?' · Nghỉ: '+d.nghiHoc:''}${d.baoLuu?' · Bảo lưu: '+d.baoLuu:''}</div>
           </div>
-          <div class="class-right">
-            <div id="stats-${lop}"></div>
-            <span class="chev" id="chev-${lop}">▼</span>
+          <div class="cb-right">
+            <div class="stat-group">
+              <div class="sp"><span class="sv ${pCls(d.pctDiHoc,80,60)}">${d.pctDiHoc}%</span><span class="sk">Đi học</span></div>
+              <div class="sp"><span class="sv ${pCls(d.pctTuVung,80,60)}">${d.pctTuVung}%</span><span class="sk">Từ vựng</span></div>
+              <div class="sp"><span class="sv ${pCls(d.pctBuBai,80,50)}">${d.pctBuBai}%</span><span class="sk">Bù bài</span></div>
+            </div>
+            <span class="chev" id="chev-${d.lop}">▼</span>
           </div>
         </div>
-        <div class="student-list" id="list-${lop}">
-          <div class="list-loading">Bấm vào thanh lớp để tải…</div>
+        <div class="student-list" id="list-${d.lop}">
+          <div class="list-msg">Bấm vào thanh lớp để tải danh sách học viên…</div>
         </div>`;
       area.appendChild(div);
     });
   }catch(e){
-    document.getElementById('classArea').innerHTML='<p style="color:red">Lỗi: '+e.message+'</p>';
+    document.getElementById('classArea').innerHTML='<div class="list-msg" style="color:red">Lỗi tải dữ liệu: '+e.message+'</div>';
   }
 }
 
@@ -180,38 +202,21 @@ async function toggleClass(lop){
   const isOpen=list.classList.contains('open');
   if(isOpen){list.classList.remove('open');bar.classList.remove('open');chev.classList.remove('open');return;}
   list.classList.add('open');bar.classList.add('open');chev.classList.add('open');
-  if(loadedData[lop]){renderStudents(lop,loadedData[lop].students);return;}
-  list.innerHTML='<div class="list-loading">Đang tải dữ liệu lớp…</div>';
+  if(detailCache[lop]){renderStudents(lop,detailCache[lop].students);return;}
+  list.innerHTML='<div class="list-msg">Đang tải…<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
   try{
     const data=await apiGet('getDashboard',{lop});
-    if(data.error){list.innerHTML='<div class="list-loading" style="color:red">'+data.error+'</div>';return;}
-    loadedData[lop]=data;
-    renderStats(lop,data);
+    if(data.error){list.innerHTML='<div class="list-msg" style="color:red">'+data.error+'</div>';return;}
+    detailCache[lop]=data;
     renderStudents(lop,data.students);
-  }catch(e){list.innerHTML='<div class="list-loading" style="color:red">Lỗi: '+e.message+'</div>';}
-}
-
-function pctCls(v,hi,lo){if(v==null)return '';return v>=hi?'good':v<lo?'bad':'warn';}
-
-function renderStats(lop,d){
-  document.getElementById('meta-'+lop).textContent=
-    `Khai giảng: ${d.ngayKhaiGiang} · Buổi ${d.soiBuoi} · Sĩ số: ${d.siSo}`+
-    (d.nghiHoc?` · Nghỉ: ${d.nghiHoc}`:'')+
-    (d.baoLuu?` · Bảo lưu: ${d.baoLuu}`:'');
-  document.getElementById('stats-'+lop).innerHTML=`
-    <div style="display:flex;gap:16px">
-      <div class="stat-pill"><span class="sv ${pctCls(d.pctDiHoc,80,60)}">${d.pctDiHoc}%</span><span class="sk">Đi học</span></div>
-      <div class="stat-pill"><span class="sv ${pctCls(d.pctTuVung,80,60)}">${d.pctTuVung}%</span><span class="sk">Từ vựng</span></div>
-      <div class="stat-pill"><span class="sv ${pctCls(d.pctBuBai,80,50)}">${d.pctBuBai}%</span><span class="sk">Bù bài</span></div>
-    </div>`;
+  }catch(e){list.innerHTML='<div class="list-msg" style="color:red">Lỗi: '+e.message+'</div>';}
 }
 
 function renderStudents(lop,students){
   const list=document.getElementById('list-'+lop);
-  if(!students||!students.length){list.innerHTML='<div class="list-loading">Không có học viên.</div>';return;}
+  if(!students||!students.length){list.innerHTML='<div class="list-msg">Không có học viên.</div>';return;}
   list.innerHTML=students.map(s=>{
     const vTxt=s.tongVang?`${s.tongVang} (${s.vangCP}CP·${s.vangKP}KP)`:'0';
-    const vCls=s.tongVang>3?'warn':'';
     const avgV=s.avgVocab!==null?s.avgVocab+'%':'—';
     const avgCls=s.avgVocab!==null?(s.avgVocab>=80?'ok':'warn'):'';
     const sc=s.maxScore!==null?s.maxScore:'—';
@@ -221,7 +226,7 @@ function renderStudents(lop,students){
         <div class="s-ma">${s.maHV}</div>
       </div>
       <div class="s-metrics">
-        <div class="sm"><div class="mv ${vCls}">${vTxt}</div><div class="mk">Vắng</div></div>
+        <div class="sm"><div class="mv ${s.tongVang>3?'warn':''}">${vTxt}</div><div class="mk">Vắng</div></div>
         <div class="sm"><div class="mv">${s.daBu}/${s.tongVang}</div><div class="mk">Đã bù</div></div>
         <div class="sm"><div class="mv ${avgCls}">${avgV}</div><div class="mk">Từ vựng</div></div>
         <div class="sm"><div class="mv">${sc}</div><div class="mk">Điểm cao nhất</div></div>
@@ -233,92 +238,75 @@ function renderStudents(lop,students){
 function toggleTip(lop,maHV,event){
   event.stopPropagation();
   if(openTipMa===maHV){closeTip();return;}
-  if(openTipMa) document.getElementById('sr-'+openTipMa)?.classList.remove('active-tip');
+  if(openTipMa) document.getElementById('sr-'+openTipMa)?.classList.remove('tip-open');
   openTipMa=maHV;
-  document.getElementById('sr-'+maHV).classList.add('active-tip');
-  const d=loadedData[lop];
+  document.getElementById('sr-'+maHV).classList.add('tip-open');
+  const d=detailCache[lop];
   if(!d) return;
   const s=d.students.find(x=>x.maHV===maHV);
   if(!s) return;
-
   document.getElementById('tipName').textContent=s.tenHV;
   document.getElementById('tipMa').textContent=s.maHV;
-
-  // Risk chips
-  const rLabels=[
-    {k:'buBai',label:'Chưa bù ≥3 buổi'},
-    {k:'vangLienTuc',label:'Vắng liên tục >3'},
-    {k:'vocab',label:'Từ vựng <80%'},
-    {k:'btvn',label:'BTVN thiếu ≥3'},
+  const rDefs=[
+    {k:'buBai',lbl:'Chưa bù ≥3 buổi'},
+    {k:'vangLienTuc',lbl:'Vắng liên tục >3'},
+    {k:'vocab',lbl:'Từ vựng <80%'},
+    {k:'btvn',lbl:'BTVN thiếu ≥3'}
   ];
-  document.getElementById('tipRisks').innerHTML=rLabels.map(r=>
-    `<span class="risk-chip ${s.risks&&s.risks[r.k]?'rc-red':'rc-ok'}">${s.risks&&s.risks[r.k]?'⚠':'✓'} ${r.label}</span>`
+  document.getElementById('tipRisks').innerHTML=rDefs.map(r=>
+    `<span class="rc ${s.risks&&s.risks[r.k]?'rc-bad':'rc-ok'}">${s.risks&&s.risks[r.k]?'⚠':'✓'} ${r.lbl}</span>`
   ).join('');
-
-  // Metrics
-  const metrics=[
-    {v:s.tongVang,k:'Buổi vắng',sub:`${s.vangCP} CP · ${s.vangKP} KP`},
-    {v:s.daBu+'/'+s.tongVang,k:'Đã bù bài'},
+  document.getElementById('tipMetrics').innerHTML=[
+    {v:s.tongVang,k:'Buổi vắng',sub:`${s.vangCP}CP · ${s.vangKP}KP`},
+    {v:`${s.daBu}/${s.tongVang}`,k:'Đã bù bài'},
     {v:s.avgVocab!==null?s.avgVocab+'%':'—',k:'% Từ vựng tb'},
-    {v:s.phutTre||0,k:'Tổng phút trễ'},
-    {v:s.phutVe||0,k:'Tổng phút về sớm'},
-    {v:s.btvnThieu||0,k:'BTVN thiếu'},
-  ];
-  document.getElementById('tipMetrics').innerHTML=metrics.map(m=>
-    `<div class="tip-m"><div class="tv">${m.v}</div><div class="tk">${m.k}</div>${m.sub?`<div class="tk">${m.sub}</div>`:''}</div>`
-  ).join('');
-
-  // Ghi chú
-  const noteEl=document.getElementById('tipNoteSection');
+    {v:s.phutTre||0,k:'Phút trễ tổng'},
+    {v:s.phutVe||0,k:'Phút về sớm'},
+    {v:s.btvnThieu||0,k:'BTVN thiếu'}
+  ].map(m=>`<div class="tip-m"><div class="tv">${m.v}</div><div class="tk">${m.k}</div>${m.sub?`<div class="tk">${m.sub}</div>`:''}</div>`).join('');
+  const notesSec=document.getElementById('tipNotesSec');
   if(s.ghiChu&&s.ghiChu.length){
-    noteEl.style.display='block';
-    document.getElementById('tipNotes').innerHTML=s.ghiChu.map(g=>
-      `<div class="note-item"><div class="note-date">${g.ngay}</div>${g.text}</div>`
-    ).join('');
-  }else noteEl.style.display='none';
-
-  // Chart điểm thi
-  const scEl=document.getElementById('tipScoreSection');
+    notesSec.style.display='block';
+    document.getElementById('tipNotes').innerHTML=s.ghiChu.map(g=>`<div class="note-item"><div class="note-date">📅 ${g.ngay}</div>${g.text}</div>`).join('');
+  }else notesSec.style.display='none';
+  const scoreSec=document.getElementById('tipScoreSec');
   if(s.scores&&s.scores.length){
-    scEl.style.display='block';
-    if(chartInst) chartInst.destroy();
+    scoreSec.style.display='block';
+    if(chartInst)chartInst.destroy();
     const sorted=[...s.scores].sort((a,b)=>new Date(a.ngay)-new Date(b.ngay));
     chartInst=new Chart(document.getElementById('tipChart').getContext('2d'),{
       type:'line',
       data:{
         labels:sorted.map(x=>x.test||x.ngay),
         datasets:[
-          {label:'Overall',data:sorted.map(x=>x.score),borderColor:'#1a5fa8',backgroundColor:'rgba(26,95,168,.08)',tension:.3,pointRadius:4},
-          {label:'Nghe',data:sorted.map(x=>x.nghe),borderColor:'#0f6e56',tension:.3,pointRadius:3,hidden:true},
-          {label:'Đọc',data:sorted.map(x=>x.doc),borderColor:'#b45309',tension:.3,pointRadius:3,hidden:true}
+          {label:'Overall',data:sorted.map(x=>x.score),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.08)',tension:.35,pointRadius:4,pointBackgroundColor:'#3b82f6'},
+          {label:'Nghe',data:sorted.map(x=>x.nghe),borderColor:'#10b981',tension:.35,pointRadius:3,hidden:true},
+          {label:'Đọc',data:sorted.map(x=>x.doc),borderColor:'#f59e0b',tension:.35,pointRadius:3,hidden:true}
         ]
       },
       options:{
         responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},
-        scales:{y:{beginAtZero:false},x:{ticks:{font:{size:9}}}}
+        plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},
+        scales:{y:{beginAtZero:false,ticks:{font:{size:10}}},x:{ticks:{font:{size:9}}}}
       }
     });
-  }else scEl.style.display='none';
-
-  // Vị trí tooltip
+  }else scoreSec.style.display='none';
   const box=document.getElementById('tipBox');
   box.style.display='block';
   document.getElementById('tipOverlay').classList.add('show');
-  const margin=12,W=380,H=Math.min(480,window.innerHeight*0.82);
-  let left=event.clientX+16,top=event.clientY-20;
-  if(left+W>window.innerWidth-margin) left=event.clientX-W-8;
-  if(left<margin) left=margin;
-  if(top+H>window.innerHeight-margin) top=window.innerHeight-H-margin;
-  if(top<margin) top=margin;
+  const M=12,W=370;
+  let left=event.clientX+14,top=event.clientY-16;
+  if(left+W>window.innerWidth-M)left=event.clientX-W-8;
+  if(left<M)left=M;
+  const boxH=Math.min(500,window.innerHeight*.8);
+  if(top+boxH>window.innerHeight-M)top=window.innerHeight-boxH-M;
+  if(top<M)top=M;
   box.style.left=left+'px';box.style.top=top+'px';
 }
 
-function handleOverlayClick(e){
-  if(!document.getElementById('tipBox').contains(e.target)) closeTip();
-}
+function handleOverlay(e){if(!document.getElementById('tipBox').contains(e.target))closeTip();}
 function closeTip(){
-  if(openTipMa) document.getElementById('sr-'+openTipMa)?.classList.remove('active-tip');
+  if(openTipMa)document.getElementById('sr-'+openTipMa)?.classList.remove('tip-open');
   openTipMa=null;
   document.getElementById('tipBox').style.display='none';
   document.getElementById('tipOverlay').classList.remove('show');
