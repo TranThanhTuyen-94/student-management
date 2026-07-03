@@ -5,195 +5,128 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản lý lớp học</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-  :root{
-    --bg:#f0f4f9; --card:#fff; --ink:#1a2332; --muted:#64748b; --border:#dde3ed;
-    --green:#0f6e56; --green-bg:#e1f5ee;
-    --blue:#1a5fa8; --blue-bg:#e8f0fb;
-    --amber:#b45309; --amber-bg:#fef3c7;
-    --purple:#5b3fa6; --purple-bg:#ede9fb;
-    --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.06);
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+:root{
+  --bg:#f0f4ff;--card:#fff;--ink:#1e2d5a;--muted:#6b7da8;--border:#dde5f7;
+  --green:#10b981;--green-bg:#d1fae5;
+  --blue:#3b82f6;--blue-bg:#dbeafe;
+  --amber:#f59e0b;--amber-bg:#fef3c7;
+  --purple:#8b5cf6;--purple-bg:#ede9fe;
+  --red:#ef4444;--red-bg:#fee2e2;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);overflow:hidden;height:100vh;}
 
-  /* HEADER */
-  .top-bar{
-    background:var(--card);
-    border-bottom:1px solid var(--border);
-    padding:0 24px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    position:sticky;top:0;z-index:10;
-    box-shadow:0 1px 6px rgba(0,0,0,0.06);
-  }
-  .top-bar .logo{font-size:15px;font-weight:700;color:var(--ink);padding:16px 0;}
-  .top-bar .date{font-size:13px;color:var(--muted);}
+.top-bar{
+  height:52px;
+  background:linear-gradient(135deg,#1e2d5a 0%,#2563eb 100%);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;position:fixed;top:0;left:0;right:0;z-index:10;
+}
+.logo{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px;}
+.date-str{font-size:12px;color:rgba(255,255,255,.75);}
 
-  /* TAB BAR */
-  .tab-bar{
-    background:var(--card);
-    border-bottom:1px solid var(--border);
-    display:flex;
-    padding:0 24px;
-    gap:4px;
-    overflow-x:auto;
-  }
-  .tab-btn{
-    display:flex;align-items:center;gap:7px;
-    padding:13px 16px;
-    border:none;background:none;cursor:pointer;
-    font-size:14px;font-weight:500;color:var(--muted);
-    border-bottom:2px solid transparent;
-    white-space:nowrap;
-    transition:color .15s;
-    font-family:inherit;
-  }
-  .tab-btn:hover{color:var(--ink);}
-  .tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
-  .tab-btn .tab-icon{font-size:16px;}
+.tab-bar{
+  height:48px;background:var(--card);border-bottom:1px solid var(--border);
+  display:flex;position:fixed;top:52px;left:0;right:0;z-index:9;
+  padding:0 8px;gap:2px;
+  box-shadow:0 2px 8px rgba(30,45,90,.07);
+}
+.tab-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:0 18px;border:none;background:none;cursor:pointer;
+  font-size:14px;font-weight:500;color:var(--muted);
+  border-bottom:2px solid transparent;white-space:nowrap;
+  transition:color .12s;font-family:inherit;
+}
+.tab-btn:hover{color:var(--ink);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;}
 
-  /* CONTENT */
-  .tab-content{display:none;padding:32px 24px;max-width:800px;margin:0 auto;}
-  .tab-content.active{display:block;}
+.sub-bar{
+  display:none;height:44px;background:var(--bg);border-bottom:1px solid var(--border);
+  position:fixed;top:100px;left:0;right:0;z-index:8;
+  align-items:center;padding:0 20px;gap:8px;
+}
+.sub-bar.show{display:flex;}
+.sub-btn{
+  padding:7px 16px;border-radius:99px;
+  border:1.5px solid var(--border);background:var(--card);
+  font-size:13px;font-weight:500;color:var(--muted);
+  cursor:pointer;font-family:inherit;transition:all .12s;
+}
+.sub-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 
-  /* MODULE CARDS bên trong tab */
-  .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px;}
-  .module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px;}
-  .mod-card{
-    background:var(--card);border:1px solid var(--border);border-radius:14px;
-    padding:18px;text-decoration:none;color:inherit;
-    display:flex;flex-direction:column;gap:10px;
-    box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s;
-  }
-  .mod-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,0.1);}
-  .mod-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;}
-  .mod-title{font-size:14px;font-weight:700;}
-  .mod-desc{font-size:12px;color:var(--muted);line-height:1.5;}
-  .mod-link{font-size:12px;font-weight:600;margin-top:auto;}
-
-  .green .mod-icon{background:var(--green-bg);}
-  .green .mod-link{color:var(--green);}
-  .blue .mod-icon{background:var(--blue-bg);}
-  .blue .mod-link{color:var(--blue);}
-  .amber .mod-icon{background:var(--amber-bg);}
-  .amber .mod-link{color:var(--amber);}
-  .purple .mod-icon{background:var(--purple-bg);}
-  .purple .mod-link{color:var(--purple);}
-
-  /* 2 nút từ vựng */
-  .vocab-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .vocab-card{
-    background:var(--card);border:1px solid var(--border);border-radius:14px;
-    padding:18px;text-decoration:none;color:inherit;
-    display:flex;flex-direction:column;gap:10px;
-    box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s;
-  }
-  .vocab-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,0.1);}
-
-  /* Placeholder quản lý chung */
-  .coming-soon{
-    background:var(--card);border:1px solid var(--border);border-radius:16px;
-    padding:48px 24px;text-align:center;
-    box-shadow:var(--shadow);
-  }
-  .coming-soon .cs-icon{font-size:40px;margin-bottom:16px;}
-  .coming-soon h2{font-size:18px;font-weight:700;margin-bottom:8px;}
-  .coming-soon p{font-size:14px;color:var(--muted);line-height:1.6;}
-
-  @media(max-width:480px){
-    .module-grid,.vocab-grid{grid-template-columns:1fr;}
-    .tab-btn{padding:12px 12px;font-size:13px;}
-  }
+.frame-wrap{position:fixed;top:100px;left:0;right:0;bottom:0;background:var(--bg);}
+.frame-wrap.has-sub{top:144px;}
+.module-frame{display:none;width:100%;height:100%;border:none;}
+.module-frame.active{display:block;}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
   <div class="logo">📚 Quản lý lớp học</div>
-  <div class="date" id="todayDate"></div>
+  <div class="date-str" id="dateStr"></div>
 </div>
 
 <div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('quanly',this)">
-    <span class="tab-icon">📊</span> Quản lý chung
-  </button>
-  <button class="tab-btn" onclick="switchTab('diemdanh',this)">
-    <span class="tab-icon">✅</span> Điểm danh
-  </button>
-  <button class="tab-btn" onclick="switchTab('tuvung',this)">
-    <span class="tab-icon">📖</span> Từ vựng
-  </button>
-  <button class="tab-btn" onclick="switchTab('btvn',this)">
-    <span class="tab-icon">📝</span> BTVN
-  </button>
+  <button class="tab-btn active" onclick="switchTab('quanly',this)">📊 Quản lý chung</button>
+  <button class="tab-btn" onclick="switchTab('diemdanh',this)">✅ Điểm danh</button>
+  <button class="tab-btn" onclick="switchTab('tuvung',this)">📖 Từ vựng</button>
+  <button class="tab-btn" onclick="switchTab('btvn',this)">📝 BTVN</button>
 </div>
 
-<!-- TAB: QUẢN LÝ CHUNG -->
-<div id="tab-quanly" class="tab-content active">
-  <div class="coming-soon">
-    <div class="cs-icon">📊</div>
-    <h2>Quản lý chung</h2>
-    <p>Tổng hợp tiến độ và chỉ số toàn bộ học viên đang được xây dựng.<br>Sắp ra mắt sau khi hoàn thiện đủ dữ liệu từ các module.</p>
-  </div>
+<div class="sub-bar" id="subBar">
+  <button class="sub-btn active" onclick="switchVocab('dotrenlop',this)">🎯 Dò bài trên lớp</button>
+  <button class="sub-btn" onclick="switchVocab('tuluyen',this)">🏠 Tự ôn tại nhà</button>
 </div>
 
-<!-- TAB: ĐIỂM DANH -->
-<div id="tab-diemdanh" class="tab-content">
-  <p class="section-title">Module điểm danh</p>
-  <div class="module-grid" style="grid-template-columns:1fr;">
-    <a class="mod-card green" href="Attendance.html">
-      <div class="mod-icon">✅</div>
-      <div class="mod-title">Điểm danh buổi học</div>
-      <div class="mod-desc">Ghi nhận có mặt, vắng, đi trễ, về sớm và ghi chú từng buổi học.</div>
-      <div class="mod-link">Mở →</div>
-    </a>
-  </div>
-</div>
-
-<!-- TAB: TỪ VỰNG -->
-<div id="tab-tuvung" class="tab-content">
-  <p class="section-title">Chọn chế độ từ vựng</p>
-  <div class="vocab-grid">
-    <a class="vocab-card blue" href="In_Class_Vocab_Checking.html">
-      <div class="mod-icon blue" style="background:var(--blue-bg)">🎯</div>
-      <div class="mod-title">Dò bài trên lớp</div>
-      <div class="mod-desc">Random từ + học viên, ghi nhận kết quả trực tiếp trong buổi học.</div>
-      <div class="mod-link" style="color:var(--blue)">Mở →</div>
-    </a>
-    <a class="vocab-card green" href="Self_Vocab_Checking.html">
-      <div class="mod-icon" style="background:var(--green-bg)">🏠</div>
-      <div class="mod-title">Tự ôn tại nhà</div>
-      <div class="mod-desc">Link dành cho học viên vắng, tự làm trắc nghiệm và gửi kết quả.</div>
-      <div class="mod-link" style="color:var(--green)">Mở →</div>
-    </a>
-  </div>
-</div>
-
-<!-- TAB: BTVN -->
-<div id="tab-btvn" class="tab-content">
-  <p class="section-title">Module bài tập về nhà</p>
-  <div class="module-grid" style="grid-template-columns:1fr;">
-    <a class="mod-card amber" href="Homework.html">
-      <div class="mod-icon">📝</div>
-      <div class="mod-title">Chấm BTVN</div>
-      <div class="mod-desc">Xem nhanh bài tập từng học viên và chấm trạng thái mỗi buổi.</div>
-      <div class="mod-link">Mở →</div>
-    </a>
-  </div>
+<div class="frame-wrap" id="frameWrap">
+  <iframe id="frame-quanly"    src="quanly.html" class="module-frame active"></iframe>
+  <iframe id="frame-diemdanh"  class="module-frame"></iframe>
+  <iframe id="frame-dotrenlop" class="module-frame"></iframe>
+  <iframe id="frame-tuluyen"   class="module-frame"></iframe>
+  <iframe id="frame-btvn"      class="module-frame"></iframe>
 </div>
 
 <script>
-  const today = new Date();
-  document.getElementById('todayDate').textContent = today.toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('dateStr').textContent =
+  new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  function switchTab(name, btn){
-    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.getElementById('tab-'+name).classList.add('active');
-    btn.classList.add('active');
+const FILES={
+  diemdanh:'diemdanh.html',
+  btvn:'btvn.html',
+  dotrenlop:'tuvung-dotrenlop.html',
+  tuluyen:'tuvung-tuluyen.html'
+};
+const loaded={quanly:true};
+let curVocab='dotrenlop';
+
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const sub=document.getElementById('subBar'),wrap=document.getElementById('frameWrap');
+  if(name==='tuvung'){
+    sub.classList.add('show');wrap.classList.add('has-sub');
+    showFrame('frame-'+curVocab,curVocab);
+    return;
   }
+  sub.classList.remove('show');wrap.classList.remove('has-sub');
+  showFrame('frame-'+name,name);
+}
+
+function switchVocab(name,btn){
+  curVocab=name;
+  document.querySelectorAll('.sub-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  showFrame('frame-'+name,name);
+}
+
+function showFrame(id,key){
+  document.querySelectorAll('.module-frame').forEach(f=>f.classList.remove('active'));
+  const f=document.getElementById(id);
+  if(!loaded[key]){f.src=FILES[key];loaded[key]=true;}
+  f.classList.add('active');
+}
 </script>
 </body>
 </html>
